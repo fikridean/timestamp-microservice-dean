@@ -23,46 +23,71 @@ app.get("/api/hello", function(req, res) {
   res.json({ greeting: 'hello API' });
 });
 
-app.get('/api/:time', function(req, res) {
-  let time = req.params.time;
+app.get('/api/:date_string?', function(req, res) {
+  // Mengambil parameter
+  let date_string = req.params.date_string;
 
-  if (!time) {
-    return res.send('Request was invalid');
+  // Mengambil data tanggal sekarang
+  let now = new Date();
+
+  // Pengecekan bila parameter tidak dicantumkan
+  if (!date_string) {
+    return res.json({
+      unix: now.getTime(),
+      utc: now.toUTCString(),
+    })
   }
-  
-  let pattern = /^\d{4}-\d{2}-\d{2}$/;
-  let pattern2 = /^\d+$/;
-  
-  if (time.match(pattern)) {
-    let date = new Date(time);
-    let unix = date.getTime();
-    let utc = date.toUTCString();
-  
+
+  // Regex
+  let pattern1 = /^\d{4}-\d{2}-\d{2}$/; // 2015-12-25
+  let pattern2 = /^\d+$/; // 1451001600000
+  let pattern3 = /^\d{2}\s(January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}?/; // 05 October 2015
+
+  // Inisiasi unix dan utc
+  let unix;
+  let utc;
+
+  // Jika cocok dengan regex pertama atau ketiga
+  if (date_string.match(pattern1) || date_string.match(pattern3)) {
+    // mendapatkan waktu sesuai dengan input
+    let date = new Date(date_string);
+
+    // Mendapatkan nilai unix (detik sampai saat itu)
+    unix = date.getTime();
+
+    // Mendapatkan nilai string utc
+    utc = date.toUTCString();
+
+    // Mengembalikan json berisi unix dan utc
     return res.json({
       unix: Number(unix),
       utc: utc,
     })
-    
   }
 
-  if (time.match(pattern2)) {
-    time = Number(time);
-    let dateObj = new Date(time);
-    let date = dateObj.toUTCString();   
-    
-    let unix = time;
-    let utc = date;
-  
+  // Jika cocok dengan regex kedua
+  if (date_string.match(pattern2)) {
+    // mendapatkan waktu sesuai dengan input yang di konversi ke number dahulu
+    let dateObj = new Date(Number(date_string));
+
+    // Mendapatkan nilai unix dari input
+    unix = Number(date_string);
+
+    // Mendapatkan nilai utc
+    let utc = dateObj.toUTCString();
+
+    // Mengembalikan json berisi unix dan utc
     return res.json({
-      unix: Number(unix),
+      unix: unix,
       utc: utc,
     })
   }
 
+  // Jika parameter tidak sesuai
   return res.json({
     'error': 'Invalid Date',
   })
-  
+
 })
 
 // listen for requests :)
